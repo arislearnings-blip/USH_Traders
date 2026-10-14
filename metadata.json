@@ -1,0 +1,6 @@
+{
+  "name": "LedgerFlow - Small Business Accounting & Installment Management",
+  "description": "Comprehensive accounting software with double-entry general ledger, automated invoice & installment tracking, inventory management, QuickBooks-style spreadsheet grids, and mobile-first touch workflows.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
