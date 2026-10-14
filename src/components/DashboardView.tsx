@@ -415,9 +415,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </button>
           </div>
 
-          {/* High-density grid preview */}
+          {/* High-density sheet preview */}
           <div className="mt-3 overflow-x-auto">
-            <table className="w-full text-left text-xs qb-grid">
+            <table className="w-full text-left text-xs sheet-table">
               <thead>
                 <tr>
                   <th className="w-12 text-center">S.No</th>

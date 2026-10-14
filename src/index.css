@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -11,13 +13,13 @@
   }
 }
 
-/* QuickBooks Desktop & Spreadsheet grid styling */
-.qb-grid {
+/* Spreadsheet table styling (Light & Dark) */
+.sheet-table, .ledger-table {
   border-collapse: separate;
   border-spacing: 0;
 }
 
-.qb-grid th {
+.sheet-table th, .ledger-table th {
   background-color: #f1f5f9;
   border-bottom: 2px solid #cbd5e1;
   border-right: 1px solid #e2e8f0;
@@ -29,22 +31,35 @@
   color: #475569;
 }
 
-.qb-grid td {
+.dark .sheet-table th, .dark .ledger-table th {
+  background-color: #1e293b;
+  border-bottom: 2px solid #334155;
+  border-right: 1px solid #334155;
+  color: #94a3b8;
+}
+
+.sheet-table td, .ledger-table td {
   border-bottom: 1px solid #e2e8f0;
   border-right: 1px solid #f1f5f9;
-  padding: 4px 6px;
+  padding: 5px 8px;
   font-size: 13px;
 }
 
-.qb-grid tr:hover td {
+.dark .sheet-table td, .dark .ledger-table td {
+  border-bottom: 1px solid #334155;
+  border-right: 1px solid #1e293b;
+  color: #f1f5f9;
+}
+
+.sheet-table tr:hover td, .ledger-table tr:hover td {
   background-color: #f8fafc;
 }
 
-.qb-grid tr.selected td {
-  background-color: #e0f2fe;
+.dark .sheet-table tr:hover td, .dark .ledger-table tr:hover td {
+  background-color: #1e293b;
 }
 
-/* Custom scrollbars for high-density tables */
+/* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -54,9 +69,17 @@
   background: #f1f5f9;
 }
 
+.dark ::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 3px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
 }
 
 ::-webkit-scrollbar-thumb:hover {

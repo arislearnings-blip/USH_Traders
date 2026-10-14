@@ -188,7 +188,7 @@ export const SalesInvoiceView: React.FC = () => {
 
           {/* Item Table */}
           <div className="border border-slate-200 rounded-lg overflow-hidden">
-            <table className="w-full text-left text-xs qb-grid">
+            <table className="w-full text-left text-xs sheet-table">
               <thead>
                 <tr>
                   <th className="w-12 text-center">#</th>

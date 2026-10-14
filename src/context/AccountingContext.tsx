@@ -12,6 +12,7 @@ import {
   JournalLine,
   AppUser,
   UserRole,
+  UserInvitation,
 } from '../types/accounting';
 import {
   INITIAL_ACCOUNTS,
@@ -35,8 +36,14 @@ interface AccountingContextType {
   payments: InstallmentPayment[];
   expenses: ExpenseRecord[];
   journalEntries: JournalEntry[];
-  currentUser: AppUser;
-  setCurrentUser: (user: AppUser) => void;
+  currentUser: AppUser | null;
+  setCurrentUser: (user: AppUser | null) => void;
+  users: AppUser[];
+  invitations: UserInvitation[];
+  login: (email: string, password: string) => { success: boolean; error?: string };
+  logout: () => void;
+  inviteUser: (data: { email: string; name: string; role: UserRole }) => { success: boolean; error?: string };
+  removeInvitation: (id: string) => void;
   syncStatus: 'SYNCED' | 'SYNCING' | 'OFFLINE';
   lastSyncedAt: Date;
   
@@ -209,7 +216,25 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
     ];
   });
 
-  const [currentUser, setCurrentUser] = useState<AppUser>(APP_USERS[0]);
+  const [users, setUsers] = useState<AppUser[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_users`);
+    return saved ? JSON.parse(saved) : APP_USERS;
+  });
+
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_currentUser`);
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const [invitations, setInvitations] = useState<UserInvitation[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_invitations`);
+    return saved ? JSON.parse(saved) : [
+      { id: 'inv_1', email: 'salman@ushtraders.com', name: 'Salman', role: 'ADMIN', invitedBy: 'arislearnings@gmail.com', invitedAt: '2026-09-01', status: 'ACCEPTED' },
+      { id: 'inv_2', email: 'ubaid@ushtraders.com', name: 'Ubaid', role: 'ACCOUNTANT', invitedBy: 'arislearnings@gmail.com', invitedAt: '2026-09-01', status: 'ACCEPTED' },
+      { id: 'inv_3', email: 'hasnain@ushtraders.com', name: 'Hasnain', role: 'ADMIN', invitedBy: 'arislearnings@gmail.com', invitedAt: '2026-09-01', status: 'ACCEPTED' },
+    ];
+  });
+
   const [syncStatus, setSyncStatus] = useState<'SYNCED' | 'SYNCING' | 'OFFLINE'>('SYNCED');
   const [lastSyncedAt, setLastSyncedAt] = useState<Date>(new Date());
 
@@ -224,6 +249,13 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
     localStorage.setItem(`${STORAGE_KEY}_payments`, JSON.stringify(payments));
     localStorage.setItem(`${STORAGE_KEY}_expenses`, JSON.stringify(expenses));
     localStorage.setItem(`${STORAGE_KEY}_journals`, JSON.stringify(journalEntries));
+    localStorage.setItem(`${STORAGE_KEY}_users`, JSON.stringify(users));
+    localStorage.setItem(`${STORAGE_KEY}_invitations`, JSON.stringify(invitations));
+    if (currentUser) {
+      localStorage.setItem(`${STORAGE_KEY}_currentUser`, JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem(`${STORAGE_KEY}_currentUser`);
+    }
 
     if (broadcastChannel) {
       broadcastChannel.postMessage({ type: 'DATA_SYNC', timestamp: Date.now() });
@@ -233,7 +265,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
 
   useEffect(() => {
     persistState();
-  }, [accounts, customers, vendors, inventory, loanParties, partners, payments, expenses, journalEntries]);
+  }, [accounts, customers, vendors, inventory, loanParties, partners, payments, expenses, journalEntries, users, currentUser, invitations]);
 
   // Listen to multi-tab sync
   useEffect(() => {
@@ -334,7 +366,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
       amount: data.amount,
       paymentMethod: data.paymentMethod,
       discountAllowed: discount,
-      collectedBy: currentUser.name,
+      collectedBy: currentUser?.name || 'Ari Accounts',
       notes: data.notes || `Installment from ${customer.name}`,
       remainingBalanceAfter: newRemaining,
     };
@@ -411,7 +443,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
     return { success: true, message: `Successfully collected ${data.amount} from ${customer.name}`, receiptNo };
   };
 
-  // Action: Batch record multiple installments (e.g. from QuickBooks-like spreadsheet)
+  // Action: Batch record multiple installments from batch collection sheet
   const batchRecordInstallments = (rows: Array<{
     customerId: string;
     amount: number;
@@ -544,7 +576,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
       date: data.startDate,
       reference: `INV-${newSerial}`,
       memo: `Sale & Installment Contract - ${data.name} (${data.itemDescription})`,
-      createdBy: currentUser.name,
+      createdBy: currentUser?.name || 'Ari Accounts',
       createdAt: new Date().toISOString(),
       sourceType: 'INVOICE',
       sourceId: newCustomer.id,
@@ -589,7 +621,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
       paidFromAccountId: data.paidFromAccountId,
       paidTo: data.paidTo,
       description: data.description,
-      loggedBy: currentUser.name,
+      loggedBy: currentUser?.name || 'Ari Accounts',
       status: 'APPROVED',
       receiptImage: data.receiptImage,
     };
@@ -612,7 +644,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
       date: today,
       reference: expenseNumber,
       memo: `${data.category}: ${data.description} paid to ${data.paidTo}`,
-      createdBy: currentUser.name,
+      createdBy: currentUser?.name || 'Ari Accounts',
       createdAt: new Date().toISOString(),
       sourceType: 'EXPENSE',
       sourceId: newExpense.id,
@@ -736,7 +768,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
       date: today,
       reference: `LOAN-${party.name}`,
       memo: `${data.type === 'RECEIVED' ? 'Loan Borrowed from' : 'Loan Repaid to'} ${party.name}: ${data.description}`,
-      createdBy: currentUser.name,
+      createdBy: currentUser?.name || 'Ari Accounts',
       createdAt: new Date().toISOString(),
       sourceType: 'LOAN',
       lines,
@@ -831,7 +863,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
       date: today,
       reference: `PART-${partner.name}`,
       memo: `Partner ${data.type} - ${partner.name}: ${data.description}`,
-      createdBy: currentUser.name,
+      createdBy: currentUser?.name || 'Ari Accounts',
       createdAt: new Date().toISOString(),
       sourceType: 'PARTNER',
       lines,
@@ -925,7 +957,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
       date: today,
       reference: `PUR-${data.vendorName}`,
       memo: `Stock purchase from ${data.vendorName} (${data.qty} units @ ${data.unitCost})`,
-      createdBy: currentUser.name,
+      createdBy: currentUser?.name || 'Ari Accounts',
       createdAt: new Date().toISOString(),
       sourceType: 'PURCHASE',
       lines: [
@@ -962,7 +994,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
     }));
   };
 
-  // Action: General Ledger / Manual Journal Entry (QuickBooks Spreadsheet Grid)
+  // Action: General Ledger / Manual Journal Entry (Batch Ledger Spreadsheet)
   const postJournalEntry = (entry: {
     memo: string;
     reference: string;
@@ -990,7 +1022,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
       date: entry.date,
       reference: entry.reference || 'MANUAL',
       memo: entry.memo,
-      createdBy: currentUser.name,
+      createdBy: currentUser?.name || 'Ari Accounts',
       createdAt: new Date().toISOString(),
       sourceType: 'MANUAL',
       lines: entry.lines.map((l, idx) => ({
@@ -1093,6 +1125,106 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
     }
   };
 
+  const login = (email: string, password: string): { success: boolean; error?: string } => {
+    const cleanEmail = email.trim().toLowerCase();
+
+    // Default primary admin rule: arislearnings@gmail.com can log in without invite
+    if (cleanEmail === 'arislearnings@gmail.com') {
+      if (password === 'admin123') {
+        const owner = users.find(u => u.email.toLowerCase() === 'arislearnings@gmail.com') || APP_USERS[0];
+        setCurrentUser(owner);
+        localStorage.setItem(`${STORAGE_KEY}_currentUser`, JSON.stringify(owner));
+        return { success: true };
+      }
+      return { success: false, error: 'Incorrect password for arislearnings@gmail.com.' };
+    }
+
+    // Any other user must be explicitly invited
+    const isInvited = invitations.some(inv => inv.email.toLowerCase() === cleanEmail) ||
+      users.some(u => u.email.toLowerCase() === cleanEmail && u.invitedBy);
+
+    if (!isInvited) {
+      return {
+        success: false,
+        error: 'Access restricted. You must be invited by the primary administrator (arislearnings@gmail.com) to access USH TRADERS.',
+      };
+    }
+
+    const existingUser = users.find(u => u.email.toLowerCase() === cleanEmail);
+    if (existingUser) {
+      if (existingUser.password && existingUser.password !== password) {
+        return { success: false, error: 'Incorrect password for invited account.' };
+      }
+      setCurrentUser(existingUser);
+      localStorage.setItem(`${STORAGE_KEY}_currentUser`, JSON.stringify(existingUser));
+      return { success: true };
+    }
+
+    const invitation = invitations.find(inv => inv.email.toLowerCase() === cleanEmail);
+    if (invitation) {
+      const newUser: AppUser = {
+        id: `user_${Date.now()}`,
+        name: invitation.name,
+        email: invitation.email,
+        role: invitation.role,
+        avatar: invitation.name.charAt(0).toUpperCase(),
+        password,
+        invitedBy: invitation.invitedBy,
+      };
+      setUsers(prev => [...prev, newUser]);
+      setCurrentUser(newUser);
+      localStorage.setItem(`${STORAGE_KEY}_currentUser`, JSON.stringify(newUser));
+      return { success: true };
+    }
+
+    return { success: false, error: 'Account not found.' };
+  };
+
+  const logout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem(`${STORAGE_KEY}_currentUser`);
+  };
+
+  const inviteUser = (data: { email: string; name: string; role: UserRole }): { success: boolean; error?: string } => {
+    const cleanEmail = data.email.trim().toLowerCase();
+    if (invitations.some(i => i.email.toLowerCase() === cleanEmail)) {
+      return { success: false, error: 'This email has already been invited.' };
+    }
+
+    const newInv: UserInvitation = {
+      id: `inv_${Date.now()}`,
+      email: cleanEmail,
+      name: data.name,
+      role: data.role,
+      invitedBy: currentUser?.email || 'arislearnings@gmail.com',
+      invitedAt: new Date().toISOString().split('T')[0],
+      status: 'PENDING',
+    };
+
+    setInvitations(prev => [...prev, newInv]);
+
+    const newUser: AppUser = {
+      id: `user_${Date.now()}`,
+      name: data.name,
+      email: cleanEmail,
+      role: data.role,
+      avatar: data.name.charAt(0).toUpperCase(),
+      password: 'user123',
+      invitedBy: currentUser?.email || 'arislearnings@gmail.com',
+    };
+    setUsers(prev => [...prev, newUser]);
+
+    return { success: true };
+  };
+
+  const removeInvitation = (id: string) => {
+    const target = invitations.find(i => i.id === id);
+    setInvitations(prev => prev.filter(i => i.id !== id));
+    if (target) {
+      setUsers(prev => prev.filter(u => u.email.toLowerCase() !== target.email.toLowerCase() || u.isOwner));
+    }
+  };
+
   return (
     <AccountingContext.Provider
       value={{
@@ -1107,6 +1239,12 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
         journalEntries,
         currentUser,
         setCurrentUser,
+        users,
+        invitations,
+        login,
+        logout,
+        inviteUser,
+        removeInvitation,
         syncStatus,
         lastSyncedAt,
         summaryMetrics,

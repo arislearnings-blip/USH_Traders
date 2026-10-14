@@ -172,7 +172,7 @@ export const InstallmentsView: React.FC<InstallmentsViewProps> = ({
               }`}
             >
               <FileSpreadsheet className="w-4 h-4" />
-              <span>{isBatchMode ? 'Exit Batch Grid' : 'QB Batch Collection Mode'}</span>
+              <span>{isBatchMode ? 'Exit Batch Sheet' : 'Batch Collection Sheet'}</span>
             </button>
 
             <button
@@ -187,27 +187,27 @@ export const InstallmentsView: React.FC<InstallmentsViewProps> = ({
 
         {/* Aggregate Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
-          <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-            <div className="text-[11px] font-semibold text-slate-500 uppercase">Total Remaining Bal</div>
-            <div className="text-lg font-bold font-mono text-slate-900 tabular-nums mt-0.5">
+          <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60">
+            <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase">Total Remaining Bal</div>
+            <div className="text-lg font-bold font-mono text-slate-900 dark:text-white tabular-nums mt-0.5">
               Rs {totalRemaining.toLocaleString()}
             </div>
           </div>
-          <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-            <div className="text-[11px] font-semibold text-slate-500 uppercase">Monthly Dues Expected</div>
-            <div className="text-lg font-bold font-mono text-emerald-700 tabular-nums mt-0.5">
+          <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60">
+            <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase">Monthly Dues Expected</div>
+            <div className="text-lg font-bold font-mono text-emerald-700 dark:text-emerald-400 tabular-nums mt-0.5">
               Rs {totalMonthlyDue.toLocaleString()}
             </div>
           </div>
-          <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-            <div className="text-[11px] font-semibold text-slate-500 uppercase">Gross Purchases</div>
-            <div className="text-lg font-bold font-mono text-slate-800 tabular-nums mt-0.5">
+          <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60">
+            <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase">Gross Purchases</div>
+            <div className="text-lg font-bold font-mono text-slate-800 dark:text-slate-200 tabular-nums mt-0.5">
               Rs {totalPurchases.toLocaleString()}
             </div>
           </div>
-          <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-            <div className="text-[11px] font-semibold text-slate-500 uppercase">Advance Downpayments</div>
-            <div className="text-lg font-bold font-mono text-indigo-700 tabular-nums mt-0.5">
+          <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60">
+            <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase">Advance Downpayments</div>
+            <div className="text-lg font-bold font-mono text-indigo-700 dark:text-indigo-400 tabular-nums mt-0.5">
               Rs {totalAdvances.toLocaleString()}
             </div>
           </div>
@@ -224,17 +224,17 @@ export const InstallmentsView: React.FC<InstallmentsViewProps> = ({
         </div>
       )}
 
-      {/* QuickBooks Batch Collection Grid Mode */}
+      {/* Multi-Customer Batch Collection Mode */}
       {isBatchMode ? (
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-200 gap-3">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800 gap-3">
             <div>
-              <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-                <span>QuickBooks Multi-Customer Installment Batch Entry</span>
+                <span>Multi-Customer Installment Collection Sheet</span>
               </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Rapidly mark monthly installment recoveries across all customers in a single grid submit
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Rapidly mark monthly installment recoveries across all customers in a single sheet submit
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -254,7 +254,7 @@ export const InstallmentsView: React.FC<InstallmentsViewProps> = ({
           </div>
 
           <div className="mt-4 overflow-x-auto max-h-[600px] border border-slate-200 rounded-lg">
-            <table className="w-full text-left text-xs qb-grid">
+            <table className="w-full text-left text-xs sheet-table">
               <thead className="sticky top-0 z-10 shadow-xs">
                 <tr>
                   <th className="w-12 text-center">S.No</th>
@@ -341,7 +341,7 @@ export const InstallmentsView: React.FC<InstallmentsViewProps> = ({
 
           {/* Customer Table */}
           <div className="mt-4 overflow-x-auto border border-slate-200 rounded-lg">
-            <table className="w-full text-left text-xs qb-grid">
+            <table className="w-full text-left text-xs sheet-table">
               <thead>
                 <tr>
                   <th 
@@ -697,7 +697,7 @@ export const InstallmentsView: React.FC<InstallmentsViewProps> = ({
                 Payment History & Vouchers
               </h4>
               <div className="border border-slate-200 rounded-lg overflow-hidden">
-                <table className="w-full text-left text-xs qb-grid">
+                <table className="w-full text-left text-xs sheet-table">
                   <thead>
                     <tr>
                       <th>Receipt #</th>

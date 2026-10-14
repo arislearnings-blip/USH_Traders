@@ -12,9 +12,9 @@ A production-ready, open-source accounting web application designed specifically
   - Track total purchase price, advance downpayments, monthly dues, and remaining balances.
   - 1-Tap installment payment collection with receipt generation and WhatsApp sharing format.
   - Detailed individual customer Khata statements with complete voucher history.
-- **QuickBooks Desktop & Spreadsheet Batch Grids**:
-  - **QB Multi-Customer Batch Collection Grid**: Mass collection entry across all customers with one-click auto-fill and batch posting.
-  - **Spreadsheet Journal Entry Grid**: Desktop-style multi-row debit/credit grid with real-time balance enforcement.
+- **Batch Ledger Tables & Multi-Row Entry**:
+  - **Multi-Customer Batch Collection Sheet**: Mass collection entry across all customers with one-click auto-fill and batch posting.
+  - **Batch Journal Entry Sheet**: Desktop-style multi-row debit/credit ledger table with real-time balance enforcement.
 - **Mobile Phones (IMEI Tracking) & Trading Inventory**:
   - IMEI and serial number tracking for smartphones (iPhone 17, Samsung Galaxy, Redmi, Infinix).
   - Wholesale trading items: solar batteries (Mohsin 100Ah), solar DC fans, Honda 125 motorcycles, rickshaw loaders, umbrellas, and sports rackets.

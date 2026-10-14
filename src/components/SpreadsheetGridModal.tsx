@@ -31,7 +31,7 @@ export const SpreadsheetGridModal: React.FC<SpreadsheetGridModalProps> = ({
 
   const [entryDate, setEntryDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
   const [entryMemo, setEntryMemo] = useState<string>('Batch General Journal Entry');
-  const [entryRef, setEntryRef] = useState<string>('QB-GRID-01');
+  const [entryRef, setEntryRef] = useState<string>('BATCH-01');
 
   const [rows, setRows] = useState<GridRow[]>([
     { id: '1', accountId: 'acc_1010', debit: 5000, credit: '', description: 'Cash collected' },
@@ -115,22 +115,22 @@ export const SpreadsheetGridModal: React.FC<SpreadsheetGridModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
-      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full flex flex-col max-h-[92vh] border border-slate-300">
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-4xl w-full flex flex-col max-h-[92vh] border border-slate-300 dark:border-slate-800">
         
         {/* Header Bar */}
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50 rounded-t-xl">
+        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/80 rounded-t-xl">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-emerald-100 text-emerald-800 rounded-lg">
+            <div className="p-2 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-400 rounded-lg">
               <FileSpreadsheet className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <span>QuickBooks Desktop Batch Spreadsheet Grid</span>
-                <span className="text-[10px] font-mono uppercase bg-slate-200 text-slate-800 px-2 py-0.5 rounded font-semibold">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <span>Batch General Ledger Spreadsheet</span>
+                <span className="text-[10px] font-mono uppercase bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-2 py-0.5 rounded font-semibold">
                   Multi-Row Journal
                 </span>
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Direct spreadsheet debit & credit ledger entry with real-time balance enforcement
               </p>
             </div>
@@ -138,7 +138,7 @@ export const SpreadsheetGridModal: React.FC<SpreadsheetGridModalProps> = ({
 
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-200"
+            className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800"
           >
             <X className="w-5 h-5" />
           </button>
@@ -194,7 +194,7 @@ export const SpreadsheetGridModal: React.FC<SpreadsheetGridModalProps> = ({
         {/* Spreadsheet Editable Table */}
         <div className="flex-1 overflow-y-auto p-6">
           <div className="border border-slate-300 rounded-lg overflow-hidden shadow-2xs">
-            <table className="w-full text-left text-xs qb-grid">
+            <table className="w-full text-left text-xs sheet-table">
               <thead>
                 <tr>
                   <th className="w-10 text-center">#</th>

@@ -146,4 +146,17 @@ export interface AppUser {
   email: string;
   role: UserRole;
   avatar: string;
+  password?: string;
+  isOwner?: boolean;
+  invitedBy?: string;
+}
+
+export interface UserInvitation {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  invitedBy: string;
+  invitedAt: string;
+  status: 'PENDING' | 'ACCEPTED';
 }

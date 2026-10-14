@@ -276,9 +276,40 @@ export const INITIAL_EXPENSES: ExpenseRecord[] = [
 ];
 
 export const APP_USERS: AppUser[] = [
-  { id: 'user_salman', name: 'Salman (Partner / Admin)', email: 'salman@ushtraders.com', role: 'ADMIN', avatar: 'S' },
-  { id: 'user_ubaid', name: 'Ubaid (Partner / Accountant)', email: 'ubaid@ushtraders.com', role: 'ACCOUNTANT', avatar: 'U' },
-  { id: 'user_hasnain', name: 'Hasnain (Partner / Sales Lead)', email: 'hasnain@ushtraders.com', role: 'ADMIN', avatar: 'H' },
-  { id: 'user_agent', name: 'Tariq (Field Collection Agent)', email: 'tariq@ushtraders.com', role: 'SALES_AGENT', avatar: 'T' },
-  { id: 'user_auditor', name: 'Rashid (External Auditor)', email: 'auditor@firm.com', role: 'AUDITOR', avatar: 'R' },
+  {
+    id: 'user_owner',
+    name: 'Ari Accounts',
+    email: 'arislearnings@gmail.com',
+    role: 'ADMIN',
+    avatar: 'A',
+    password: 'admin123',
+    isOwner: true,
+  },
+  {
+    id: 'user_salman',
+    name: 'Salman',
+    email: 'salman@ushtraders.com',
+    role: 'ADMIN',
+    avatar: 'S',
+    password: 'user123',
+    invitedBy: 'arislearnings@gmail.com',
+  },
+  {
+    id: 'user_ubaid',
+    name: 'Ubaid',
+    email: 'ubaid@ushtraders.com',
+    role: 'ACCOUNTANT',
+    avatar: 'U',
+    password: 'user123',
+    invitedBy: 'arislearnings@gmail.com',
+  },
+  {
+    id: 'user_hasnain',
+    name: 'Hasnain',
+    email: 'hasnain@ushtraders.com',
+    role: 'ADMIN',
+    avatar: 'H',
+    password: 'user123',
+    invitedBy: 'arislearnings@gmail.com',
+  },
 ];
