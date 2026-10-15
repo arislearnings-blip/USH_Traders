@@ -11,6 +11,7 @@ import {
   Moon,
   KeyRound,
 } from 'lucide-react';
+import { UshTradersIcon } from './UshTradersIcon';
 
 export const LoginView: React.FC = () => {
   const { login } = useAccounting();
@@ -57,8 +58,8 @@ export const LoginView: React.FC = () => {
       </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center px-4">
-        <div className="mx-auto w-12 h-12 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xl shadow-md">
-          UT
+        <div className="flex justify-center">
+          <UshTradersIcon className="w-14 h-14 rounded-2xl shadow-lg hover:scale-105 transition-transform" />
         </div>
         <h1 className="mt-4 text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           USH TRADERS

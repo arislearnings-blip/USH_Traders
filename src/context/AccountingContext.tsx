@@ -13,6 +13,7 @@ import {
   AppUser,
   UserRole,
   UserInvitation,
+  Invoice,
 } from '../types/accounting';
 import {
   INITIAL_ACCOUNTS,
@@ -23,6 +24,7 @@ import {
   INITIAL_PARTNERS,
   INITIAL_RECENT_PAYMENTS,
   INITIAL_EXPENSES,
+  INITIAL_INVOICES,
   APP_USERS,
 } from '../data/initialData';
 
@@ -36,6 +38,7 @@ interface AccountingContextType {
   payments: InstallmentPayment[];
   expenses: ExpenseRecord[];
   journalEntries: JournalEntry[];
+  invoices: Invoice[];
   currentUser: AppUser | null;
   setCurrentUser: (user: AppUser | null) => void;
   users: AppUser[];
@@ -72,8 +75,30 @@ interface AccountingContextType {
     startDate: string;
     itemDescription: string;
     itemId?: string;
-  }) => { success: boolean; customer: Customer };
+    imeiOrSerial?: string;
+    durationMonths?: number;
+  }) => { success: boolean; customer: Customer; invoice?: Invoice };
 
+  // Invoice CRUD
+  addInvoice: (invoice: Omit<Invoice, 'id' | 'createdAt'>) => Invoice;
+  updateInvoice: (id: string, updates: Partial<Invoice>) => void;
+  deleteInvoice: (id: string) => void;
+
+  // Customer CRUD
+  updateCustomer: (id: string, updates: Partial<Customer>) => void;
+  deleteCustomer: (id: string) => void;
+
+  // Payment CRUD
+  updatePayment: (id: string, updates: Partial<InstallmentPayment>) => void;
+  deletePayment: (id: string) => void;
+
+  // Inventory CRUD
+  addInventoryItem: (item: Omit<InventoryItem, 'id'>) => void;
+  updateInventoryItem: (id: string, updates: Partial<InventoryItem>) => void;
+  deleteInventoryItem: (id: string) => void;
+  updateInventoryStock: (itemId: string, newQty: number, reason: string) => void;
+
+  // Expense CRUD
   recordExpense: (data: {
     category: ExpenseRecord['category'];
     amount: number;
@@ -82,7 +107,14 @@ interface AccountingContextType {
     description: string;
     receiptImage?: string;
   }) => { success: boolean; expenseNumber: string };
+  updateExpense: (id: string, updates: Partial<ExpenseRecord>) => void;
+  deleteExpense: (id: string) => void;
 
+  // Loan & Partner CRUD
+  addLoanParty: (party: Omit<LoanParty, 'id'>) => void;
+  updateLoanParty: (id: string, updates: Partial<LoanParty>) => void;
+  deleteLoanParty: (id: string) => void;
+  deleteLoanTransaction: (id: string) => void;
   recordLoanTransaction: (data: {
     partyId: string;
     type: 'RECEIVED' | 'REPAID';
@@ -90,7 +122,6 @@ interface AccountingContextType {
     sourceAccountId: string;
     description: string;
   }) => void;
-
   recordPartnerDistribution: (data: {
     partnerId: string;
     type: 'DIVIDEND' | 'DRAWING' | 'INVESTMENT';
@@ -98,9 +129,7 @@ interface AccountingContextType {
     sourceAccountId: string;
     description: string;
   }) => void;
-
-  addInventoryItem: (item: Omit<InventoryItem, 'id'>) => void;
-  updateInventoryStock: (itemId: string, newQty: number, reason: string) => void;
+  updatePartner: (id: string, updates: Partial<PartnerEquity>) => void;
 
   recordPurchase: (data: {
     vendorId: string;
@@ -216,6 +245,11 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
     ];
   });
 
+  const [invoices, setInvoices] = useState<Invoice[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_invoices`);
+    return saved ? JSON.parse(saved) : INITIAL_INVOICES;
+  });
+
   const [users, setUsers] = useState<AppUser[]>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_users`);
     return saved ? JSON.parse(saved) : APP_USERS;
@@ -249,6 +283,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
     localStorage.setItem(`${STORAGE_KEY}_payments`, JSON.stringify(payments));
     localStorage.setItem(`${STORAGE_KEY}_expenses`, JSON.stringify(expenses));
     localStorage.setItem(`${STORAGE_KEY}_journals`, JSON.stringify(journalEntries));
+    localStorage.setItem(`${STORAGE_KEY}_invoices`, JSON.stringify(invoices));
     localStorage.setItem(`${STORAGE_KEY}_users`, JSON.stringify(users));
     localStorage.setItem(`${STORAGE_KEY}_invitations`, JSON.stringify(invitations));
     if (currentUser) {
@@ -265,7 +300,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
 
   useEffect(() => {
     persistState();
-  }, [accounts, customers, vendors, inventory, loanParties, partners, payments, expenses, journalEntries, users, currentUser, invitations]);
+  }, [accounts, customers, vendors, inventory, loanParties, partners, payments, expenses, journalEntries, invoices, users, currentUser, invitations]);
 
   // Listen to multi-tab sync
   useEffect(() => {
@@ -423,7 +458,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
       date: today,
       reference: receiptNo,
       memo: `Installment payment collection - ${customer.name}`,
-      createdBy: currentUser.name,
+      createdBy: currentUser?.name || 'Administrator',
       createdAt: new Date().toISOString(),
       sourceType: 'PAYMENT',
       sourceId: newPayment.id,
@@ -478,6 +513,8 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
     startDate: string;
     itemDescription: string;
     itemId?: string;
+    imeiOrSerial?: string;
+    durationMonths?: number;
   }) => {
     const newSerial = Math.max(...customers.map(c => c.serialNo), 36) + 1;
     const remainingBalance = Math.max(0, data.totalPurchases - data.advancePaid);
@@ -597,7 +634,112 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
       return a;
     }));
 
-    return { success: true, customer: newCustomer };
+    // Auto-create matching invoice
+    const newInvoice: Invoice = {
+      id: `inv_${Date.now()}`,
+      invoiceNo: `INV-2026-${newCustomer.serialNo.toString().padStart(3, '0')}`,
+      date: data.startDate,
+      customerId: newCustomer.id,
+      customerName: newCustomer.name,
+      customerPhone: newCustomer.phone,
+      customerAddress: newCustomer.address,
+      itemDescription: data.itemDescription,
+      imeiOrSerial: data.imeiOrSerial || '',
+      saleType: remainingBalance > 0 ? 'INSTALLMENT' : 'CASH',
+      totalPrice: data.totalPurchases,
+      advancePaid: data.advancePaid,
+      remainingBalance,
+      monthlyInstallment: data.monthlyInstallment,
+      durationMonths: data.durationMonths || 10,
+      status: remainingBalance === 0 ? 'PAID' : 'ACTIVE',
+      createdAt: new Date().toISOString(),
+    };
+
+    setInvoices(prev => [newInvoice, ...prev]);
+
+    return { success: true, customer: newCustomer, invoice: newInvoice };
+  };
+
+  // Action: Invoice CRUD
+  const addInvoice = (invoiceData: Omit<Invoice, 'id' | 'createdAt'>): Invoice => {
+    const newInv: Invoice = {
+      ...invoiceData,
+      id: `inv_${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
+    setInvoices(prev => [newInv, ...prev]);
+    return newInv;
+  };
+
+  const updateInvoice = (id: string, updates: Partial<Invoice>) => {
+    setInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, ...updates } : inv));
+    // Also sync customer name/phone/address if linked
+    const target = invoices.find(i => i.id === id);
+    if (target && target.customerId) {
+      setCustomers(prev => prev.map(c => {
+        if (c.id === target.customerId) {
+          return {
+            ...c,
+            name: updates.customerName ?? c.name,
+            phone: updates.customerPhone ?? c.phone,
+            address: updates.customerAddress ?? c.address,
+            remainingBalance: updates.remainingBalance !== undefined ? updates.remainingBalance : c.remainingBalance,
+            monthlyInstallment: updates.monthlyInstallment !== undefined ? updates.monthlyInstallment : c.monthlyInstallment,
+          };
+        }
+        return c;
+      }));
+    }
+  };
+
+  const deleteInvoice = (id: string) => {
+    setInvoices(prev => prev.filter(inv => inv.id !== id));
+  };
+
+  // Action: Customer CRUD
+  const updateCustomer = (id: string, updates: Partial<Customer>) => {
+    setCustomers(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+    if (updates.name || updates.phone || updates.address) {
+      setInvoices(prev => prev.map(inv => inv.customerId === id ? {
+        ...inv,
+        customerName: updates.name ?? inv.customerName,
+        customerPhone: updates.phone ?? inv.customerPhone,
+        customerAddress: updates.address ?? inv.customerAddress,
+      } : inv));
+    }
+  };
+
+  const deleteCustomer = (id: string) => {
+    setCustomers(prev => prev.filter(c => c.id !== id));
+    setInvoices(prev => prev.filter(inv => inv.customerId !== id));
+  };
+
+  // Action: Payment CRUD
+  const updatePayment = (id: string, updates: Partial<InstallmentPayment>) => {
+    setPayments(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+  };
+
+  const deletePayment = (id: string) => {
+    const target = payments.find(p => p.id === id);
+    if (target) {
+      setCustomers(prev => prev.map(c => {
+        if (c.id === target.customerId) {
+          const restored = c.remainingBalance + target.amount + (target.discountAllowed || 0);
+          return {
+            ...c,
+            remainingBalance: restored,
+            status: restored > 0 ? 'ACTIVE' : c.status,
+          };
+        }
+        return c;
+      }));
+      setAccounts(prev => prev.map(a => {
+        if (a.id === 'acc_1010') return { ...a, balance: Math.max(0, a.balance - target.amount) };
+        if (a.id === 'acc_1100') return { ...a, balance: a.balance + target.amount };
+        return a;
+      }));
+    }
+    setPayments(prev => prev.filter(p => p.id !== id));
   };
 
   // Action: Record Expense
@@ -678,6 +820,23 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
     }));
 
     return { success: true, expenseNumber };
+  };
+
+  const updateExpense = (id: string, updates: Partial<ExpenseRecord>) => {
+    setExpenses(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e));
+  };
+
+  const deleteExpense = (id: string) => {
+    const target = expenses.find(e => e.id === id);
+    if (target) {
+      setAccounts(prev => prev.map(a => {
+        if (a.id === target.paidFromAccountId) {
+          return { ...a, balance: a.balance + target.amount };
+        }
+        return a;
+      }));
+    }
+    setExpenses(prev => prev.filter(e => e.id !== id));
   };
 
   // Action: Record Loan Inflow or Repayment (Faiz, Dawood, etc.)
@@ -888,6 +1047,31 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
     }));
   };
 
+  // Action: Loan Party CRUD
+  const addLoanParty = (party: Omit<LoanParty, 'id'>) => {
+    const newParty: LoanParty = {
+      ...party,
+      id: `lp_${Date.now()}`,
+    };
+    setLoanParties(prev => [...prev, newParty]);
+  };
+
+  const updateLoanParty = (id: string, updates: Partial<LoanParty>) => {
+    setLoanParties(prev => prev.map(lp => lp.id === id ? { ...lp, ...updates } : lp));
+  };
+
+  const deleteLoanParty = (id: string) => {
+    setLoanParties(prev => prev.filter(lp => lp.id !== id));
+  };
+
+  const deleteLoanTransaction = (id: string) => {
+    // optional helper
+  };
+
+  const updatePartner = (id: string, updates: Partial<PartnerEquity>) => {
+    setPartners(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+  };
+
   // Action: Add new item to Inventory
   const addInventoryItem = (item: Omit<InventoryItem, 'id'>) => {
     const newItem: InventoryItem = {
@@ -895,6 +1079,16 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
       id: `item_${Date.now()}`,
     };
     setInventory(prev => [newItem, ...prev]);
+  };
+
+  // Action: Update Inventory Item
+  const updateInventoryItem = (id: string, updates: Partial<InventoryItem>) => {
+    setInventory(prev => prev.map(i => i.id === id ? { ...i, ...updates } : i));
+  };
+
+  // Action: Delete Inventory Item
+  const deleteInventoryItem = (id: string) => {
+    setInventory(prev => prev.filter(i => i.id !== id));
   };
 
   // Action: Adjust Stock
@@ -1066,6 +1260,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
     localStorage.removeItem(`${STORAGE_KEY}_payments`);
     localStorage.removeItem(`${STORAGE_KEY}_expenses`);
     localStorage.removeItem(`${STORAGE_KEY}_journals`);
+    localStorage.removeItem(`${STORAGE_KEY}_invoices`);
 
     setAccounts(INITIAL_ACCOUNTS);
     setCustomers(INITIAL_CUSTOMERS);
@@ -1076,6 +1271,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
     setPayments(INITIAL_RECENT_PAYMENTS);
     setExpenses(INITIAL_EXPENSES);
     setJournalEntries([]);
+    setInvoices(INITIAL_INVOICES);
   };
 
   // Export database backup
@@ -1093,12 +1289,13 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
       payments,
       expenses,
       journalEntries,
+      invoices,
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `USH_TRADERS_LedgerFlow_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `USH_TRADERS_Backup_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -1117,6 +1314,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
         if (parsed.payments) setPayments(parsed.payments);
         if (parsed.expenses) setExpenses(parsed.expenses);
         if (parsed.journalEntries) setJournalEntries(parsed.journalEntries);
+        if (parsed.invoices) setInvoices(parsed.invoices);
         return true;
       }
       return false;
@@ -1251,11 +1449,28 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
         recordInstallmentPayment,
         batchRecordInstallments,
         createCustomerInstallment,
+        invoices,
+        addInvoice,
+        updateInvoice,
+        deleteInvoice,
+        updateCustomer,
+        deleteCustomer,
+        updatePayment,
+        deletePayment,
+        addInventoryItem,
+        updateInventoryItem,
+        deleteInventoryItem,
+        updateInventoryStock,
         recordExpense,
+        updateExpense,
+        deleteExpense,
+        addLoanParty,
+        updateLoanParty,
+        deleteLoanParty,
+        deleteLoanTransaction,
         recordLoanTransaction,
         recordPartnerDistribution,
-        addInventoryItem,
-        updateInventoryStock,
+        updatePartner,
         recordPurchase,
         postJournalEntry,
         resetToDefaultData,

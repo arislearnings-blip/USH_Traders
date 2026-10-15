@@ -12,6 +12,7 @@ import { LoansAndPartnersView } from './components/LoansAndPartnersView';
 import { ReportsView } from './components/ReportsView';
 import { BatchLedgerModal } from './components/BatchLedgerModal';
 import { MobileQuickActionDrawer } from './components/MobileQuickActionDrawer';
+import { UshTradersIcon } from './components/UshTradersIcon';
 import { RotateCcw } from 'lucide-react';
 
 const AppContent: React.FC = () => {
@@ -43,8 +44,8 @@ const AppContent: React.FC = () => {
         openBatchSheet={() => setIsBatchSheetOpen(true)}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Main Content Area: Fluid and auto-fitting to available screen area */}
+      <main className="flex-1 w-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-6 py-4 transition-all">
         {activeTab === 'dashboard' && (
           <DashboardView
             setActiveTab={setActiveTab}
@@ -82,12 +83,13 @@ const AppContent: React.FC = () => {
       </main>
 
       {/* Clean Unboxed Footer with Reset Control */}
-      <footer className="mt-auto border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 text-xs text-slate-500 dark:text-slate-400 transition-colors">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="font-bold text-slate-800 dark:text-slate-200">USH TRADERS</span>
+      <footer className="mt-auto border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-4 text-xs text-slate-500 dark:text-slate-400 transition-colors">
+        <div className="w-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <UshTradersIcon className="w-5 h-5 rounded-md shrink-0 shadow-2xs" />
+            <span className="font-extrabold text-slate-900 dark:text-white tracking-tight">USH TRADERS</span>
             <span aria-hidden="true">·</span>
-            <span>LedgerFlow Business Engine</span>
+            <span>Financial & Installment ERP</span>
             <span aria-hidden="true">·</span>
             <span>Single Truth Double-Entry</span>
           </div>

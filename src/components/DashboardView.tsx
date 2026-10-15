@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   FileSpreadsheet,
 } from 'lucide-react';
+import { UshTradersIcon } from './UshTradersIcon';
 
 interface DashboardViewProps {
   setActiveTab: (tab: string) => void;
@@ -80,101 +81,135 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       )}
 
+      {/* Dashboard Top Banner with USH TRADERS Icon */}
+      <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-colors">
+        <div className="flex items-center gap-3">
+          <UshTradersIcon className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl shadow-xs shrink-0" />
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                USH TRADERS
+              </h1>
+              <span className="text-[11px] font-bold px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 rounded-md border border-emerald-200 dark:border-emerald-800">
+                Single Truth General Ledger
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Financial overview, installment receivables, device inventory, and double-entry reconciliation
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setActiveTab('invoices')}
+            className="px-3.5 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 rounded-lg shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <span>+ New Sale</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('installments')}
+            className="px-3.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <span>Khata Registry</span>
+          </button>
+        </div>
+      </div>
+
       {/* Primary KPI Grid (Matching USH TRADERS Summary Sheet) */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         
         {/* Remaining Balance */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between transition-colors">
           <div>
-            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
               Remaining Balance
             </div>
-            <div className="mt-1 text-xl sm:text-2xl font-bold font-mono text-slate-900 tabular-nums">
+            <div className="mt-1 text-xl sm:text-2xl font-bold font-mono text-slate-900 dark:text-white tabular-nums">
               Rs {summaryMetrics.remainingCustomerBalance.toLocaleString()}
             </div>
           </div>
-          <div className="mt-2 text-[11px] text-slate-500 flex items-center gap-1">
+          <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
             <Users className="w-3.5 h-3.5 text-indigo-500" />
             <span>{activeCustomers.length} active customer khatas</span>
           </div>
         </div>
 
         {/* Monthly Expected Return */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between transition-colors">
           <div>
-            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
               Monthly Return
             </div>
-            <div className="mt-1 text-xl sm:text-2xl font-bold font-mono text-emerald-700 tabular-nums">
+            <div className="mt-1 text-xl sm:text-2xl font-bold font-mono text-emerald-700 dark:text-emerald-400 tabular-nums">
               Rs {summaryMetrics.monthlyExpectedReturn.toLocaleString()}
             </div>
           </div>
-          <div className="mt-2 text-[11px] text-slate-500 flex items-center gap-1">
-            <Calendar className="w-3.5 h-3.5 text-emerald-600" />
+          <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+            <Calendar className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             <span>Scheduled recurring cash</span>
           </div>
         </div>
 
         {/* Cash In Hand */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between transition-colors">
           <div>
-            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
               Cash In Hand
             </div>
-            <div className="mt-1 text-xl sm:text-2xl font-bold font-mono text-indigo-700 tabular-nums">
+            <div className="mt-1 text-xl sm:text-2xl font-bold font-mono text-indigo-700 dark:text-indigo-400 tabular-nums">
               Rs {summaryMetrics.cashInHand.toLocaleString()}
             </div>
           </div>
-          <div className="mt-2 text-[11px] text-slate-500 flex items-center gap-1">
-            <Wallet className="w-3.5 h-3.5 text-indigo-600" />
+          <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+            <Wallet className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
             <span>Ready physical balance</span>
           </div>
         </div>
 
         {/* Outstanding Loan (Faiz & Lenders) */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between transition-colors">
           <div>
-            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
               Loans To Be Paid
             </div>
-            <div className="mt-1 text-xl sm:text-2xl font-bold font-mono text-rose-600 tabular-nums">
+            <div className="mt-1 text-xl sm:text-2xl font-bold font-mono text-rose-600 dark:text-rose-400 tabular-nums">
               Rs {summaryMetrics.totalLoanPayable.toLocaleString()}
             </div>
           </div>
-          <div className="mt-2 text-[11px] text-slate-500 flex items-center gap-1">
+          <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
             <AlertCircle className="w-3.5 h-3.5 text-rose-500" />
             <span>Faiz: Rs 45,890 remaining</span>
           </div>
         </div>
 
         {/* Capital + Profit */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between transition-colors">
           <div>
-            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
               Capital + Profit
             </div>
-            <div className="mt-1 text-xl sm:text-2xl font-bold font-mono text-slate-900 tabular-nums">
+            <div className="mt-1 text-xl sm:text-2xl font-bold font-mono text-slate-900 dark:text-white tabular-nums">
               Rs {summaryMetrics.capitalAndProfit.toLocaleString()}
             </div>
           </div>
-          <div className="mt-2 text-[11px] text-slate-500 flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
+          <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+            <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             <span>Total business equity</span>
           </div>
         </div>
 
         {/* Total Stock Valuation */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between transition-colors">
           <div>
-            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
               Stock Valuation
             </div>
-            <div className="mt-1 text-xl sm:text-2xl font-bold font-mono text-slate-900 tabular-nums">
+            <div className="mt-1 text-xl sm:text-2xl font-bold font-mono text-slate-900 dark:text-white tabular-nums">
               Rs {summaryMetrics.totalInventoryValuation.toLocaleString()}
             </div>
           </div>
-          <div className="mt-2 text-[11px] text-slate-500 flex items-center gap-1">
-            <Smartphone className="w-3.5 h-3.5 text-indigo-500" />
+          <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+            <Smartphone className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
             <span>Mobiles & trading units</span>
           </div>
         </div>
@@ -236,18 +271,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left Column: 1-Tap Touch Payment Entry (Optimized for Mobile/Field Collection) */}
-        <div className="lg:col-span-5 bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+        <div className="lg:col-span-5 bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between transition-colors">
           <div>
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
               <div>
-                <h3 className="font-bold text-slate-900 text-sm">
+                <h3 className="font-bold text-slate-900 dark:text-white text-sm">
                   1-Tap Installment Collection
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Instant touch entry with auto-ledger updating
                 </p>
               </div>
-              <span className="text-xs font-semibold px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded border border-emerald-200">
+              <span className="text-xs font-semibold px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 rounded border border-emerald-200 dark:border-emerald-800">
                 Live Single-Truth
               </span>
             </div>
@@ -396,13 +431,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* Right Column: Customer Installment Schedule Summary (Spreadsheet preview) */}
-        <div className="lg:col-span-7 bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+        <div className="lg:col-span-7 bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs transition-colors">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
             <div>
-              <h3 className="font-bold text-slate-900 text-sm">
+              <h3 className="font-bold text-slate-900 dark:text-white text-sm">
                 Customer Balances & Monthly Dues (USH TRADERS)
               </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Real-time tracking of receivables and installment recovery
               </p>
             </div>

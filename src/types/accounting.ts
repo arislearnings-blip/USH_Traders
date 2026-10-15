@@ -51,6 +51,27 @@ export interface Customer {
   itemDescription?: string;
 }
 
+export interface Invoice {
+  id: string;
+  invoiceNo: string;
+  date: string;
+  customerId: string;
+  customerName: string;
+  customerPhone?: string;
+  customerAddress?: string;
+  itemDescription: string;
+  imeiOrSerial?: string;
+  saleType: 'INSTALLMENT' | 'CASH';
+  totalPrice: number;
+  advancePaid: number;
+  remainingBalance: number;
+  monthlyInstallment: number;
+  durationMonths: number;
+  status: 'ACTIVE' | 'PAID' | 'CANCELLED';
+  notes?: string;
+  createdAt: string;
+}
+
 export interface Vendor {
   id: string;
   name: string;

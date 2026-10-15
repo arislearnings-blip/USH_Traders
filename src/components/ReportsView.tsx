@@ -219,19 +219,19 @@ export const ReportsView: React.FC = () => {
     <div className="space-y-6">
       
       {/* Top Banner */}
-      <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+      <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs transition-colors">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-indigo-600" />
+              <h1 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 <span>Financial Statements & Accounting Reports</span>
               </h1>
-              <span className="text-xs px-2.5 py-0.5 bg-emerald-50 text-emerald-700 font-semibold rounded-md border border-emerald-200">
+              <span className="text-xs px-2.5 py-0.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-semibold rounded-md border border-emerald-200 dark:border-emerald-800">
                 Single Truth
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Real-time Cash Flow (Pages 11/23), Balance Sheet, P&L, Trial Balance, and Account Ledgers
             </p>
           </div>
@@ -239,21 +239,21 @@ export const ReportsView: React.FC = () => {
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={handleExportCSV}
-              className="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg border border-slate-200 flex items-center gap-1.5 transition-colors"
+              className="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <Download className="w-4 h-4" />
               <span>Export CSV</span>
             </button>
             <button
               onClick={exportDatabaseJSON}
-              className="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg border border-slate-200 flex items-center gap-1.5 transition-colors"
+              className="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <Download className="w-4 h-4" />
               <span>Backup JSON</span>
             </button>
             <button
               onClick={() => window.print()}
-              className="px-3.5 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-xs flex items-center gap-1.5 transition-colors"
+              className="px-3.5 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <Printer className="w-4 h-4" />
               <span>Print Report</span>
@@ -261,8 +261,8 @@ export const ReportsView: React.FC = () => {
           </div>
         </div>
 
-        {/* Report Selector Tabs */}
-        <div className="flex items-center gap-1.5 pt-4 overflow-x-auto no-scrollbar">
+        {/* Report Selector Tabs: auto-fit and wrap so no tabs are hidden */}
+        <div className="flex flex-wrap lg:flex-nowrap items-center gap-1.5 pt-4">
           {[
             { id: 'CASH_FLOW', label: 'Cash Flow Statement' },
             { id: 'BALANCE_SHEET', label: 'Balance Sheet' },
@@ -273,10 +273,10 @@ export const ReportsView: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => setActiveReport(tab.id as any)}
-              className={`px-3.5 py-2 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap ${
+              className={`flex-1 min-w-[130px] text-center px-3 py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
                 activeReport === tab.id
                   ? 'bg-indigo-600 text-white shadow-xs font-bold'
-                  : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200'
+                  : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
               }`}
             >
               {tab.label}
@@ -287,13 +287,13 @@ export const ReportsView: React.FC = () => {
 
       {/* 1. CASH FLOW STATEMENT VIEW (Directly matching USH TRADERS Sheet Page 11 & 23) */}
       {activeReport === 'CASH_FLOW' && (
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-6">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-6 transition-colors">
           
-          <div className="border-b border-slate-200 pb-4">
-            <h2 className="text-base font-bold text-slate-900">
+          <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">
               CASH FLOW STATEMENT FROM SEP-2025 ONWARD
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               USH TRADERS · Direct Cash Flow Statement & Liquidity Summary
             </p>
           </div>
@@ -331,7 +331,7 @@ export const ReportsView: React.FC = () => {
               Chronological Receipts & Outflows
             </h3>
             <div className="border border-slate-200 rounded-lg overflow-hidden">
-              <table className="w-full text-left text-xs qb-grid">
+              <table className="w-full text-left text-xs sheet-table ledger-table">
                 <thead>
                   <tr>
                     <th className="w-12 text-center">#</th>
@@ -406,13 +406,13 @@ export const ReportsView: React.FC = () => {
 
       {/* 2. BALANCE SHEET VIEW */}
       {activeReport === 'BALANCE_SHEET' && (
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-6">
-          <div className="border-b border-slate-200 pb-4 flex justify-between items-center">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-6 transition-colors">
+          <div className="border-b border-slate-200 dark:border-slate-800 pb-4 flex justify-between items-center">
             <div>
-              <h2 className="text-base font-bold text-slate-900">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
                 BALANCE SHEET (STATEMENT OF FINANCIAL POSITION)
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 As of {new Date().toLocaleDateString()} · USH TRADERS
               </p>
             </div>
@@ -511,12 +511,12 @@ export const ReportsView: React.FC = () => {
 
       {/* 3. PROFIT & LOSS VIEW */}
       {activeReport === 'PROFIT_LOSS' && (
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-6">
-          <div className="border-b border-slate-200 pb-4">
-            <h2 className="text-base font-bold text-slate-900">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-6 transition-colors">
+          <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">
               INCOME STATEMENT (PROFIT & LOSS)
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               USH TRADERS · Cumulative Trading Period
             </p>
           </div>
@@ -584,13 +584,13 @@ export const ReportsView: React.FC = () => {
 
       {/* 4. TRIAL BALANCE VIEW */}
       {activeReport === 'TRIAL_BALANCE' && (
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-4">
-          <div className="border-b border-slate-200 pb-4 flex justify-between items-center">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4 transition-colors">
+          <div className="border-b border-slate-200 dark:border-slate-800 pb-4 flex justify-between items-center">
             <div>
-              <h2 className="text-base font-bold text-slate-900">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
                 TRIAL BALANCE VERIFICATION
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 USH TRADERS · Double-Entry Parity Check
               </p>
             </div>
@@ -601,7 +601,7 @@ export const ReportsView: React.FC = () => {
           </div>
 
           <div className="border border-slate-200 rounded-lg overflow-hidden">
-            <table className="w-full text-left text-xs qb-grid">
+            <table className="w-full text-left text-xs sheet-table ledger-table">
               <thead>
                 <tr>
                   <th className="w-20">Code</th>
@@ -640,14 +640,14 @@ export const ReportsView: React.FC = () => {
 
       {/* 5. GENERAL LEDGER DRILL-DOWN VIEW */}
       {activeReport === 'GENERAL_LEDGER' && (
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-200 gap-3">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4 transition-colors">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800 gap-3">
             <div>
-              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-indigo-600" />
+              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 <span>Account General Ledger Drill-Down</span>
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Inspect detailed transaction journal entries and running balance for any account
               </p>
             </div>
@@ -689,7 +689,7 @@ export const ReportsView: React.FC = () => {
 
           {/* Transactions Table */}
           <div className="border border-slate-200 rounded-lg overflow-hidden">
-            <table className="w-full text-left text-xs qb-grid">
+            <table className="w-full text-left text-xs sheet-table ledger-table">
               <thead>
                 <tr>
                   <th className="w-24">Date</th>
