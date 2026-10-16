@@ -87,10 +87,61 @@
 }
 
 @media print {
-  .no-print {
+  @page {
+    size: auto;
+    margin: 8mm 10mm;
+  }
+
+  html, body {
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 10pt !important;
+    overflow: visible !important;
+  }
+
+  .no-print, header, footer, nav {
     display: none !important;
   }
+
   .print-only {
     display: block !important;
+  }
+
+  /* Force full width and auto-adaptive layout on printable containers */
+  main, .print-container, table, .sheet-table, .ledger-table {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  /* Avoid page breaks inside table rows and financial summary cards */
+  tr, .print-avoid-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* When modal is open with printable content, make it cleanly take full width */
+  .printable-modal {
+    position: static !important;
+    inset: auto !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }

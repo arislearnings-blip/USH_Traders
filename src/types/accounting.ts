@@ -18,6 +18,7 @@ export interface JournalLine {
   debit: number;
   credit: number;
   description: string;
+  partyType?: 'NONE' | 'OWNER' | 'CUSTOMER' | 'VENDOR' | 'OTHER';
   partyId?: string;
   partyName?: string;
 }
@@ -78,6 +79,22 @@ export interface Vendor {
   phone: string;
   category: string;
   balancePayable: number;
+  address?: string;
+  notes?: string;
+}
+
+export interface SupplierTransaction {
+  id: string;
+  vendorId: string;
+  vendorName: string;
+  type: 'PURCHASE_BILL' | 'PAYMENT';
+  date: string;
+  reference: string;
+  itemsOrDescription: string;
+  totalAmount: number;
+  paidAmount: number;
+  balancePayableAfter: number;
+  paymentMethod?: string;
   notes?: string;
 }
 

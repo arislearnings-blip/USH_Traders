@@ -83,7 +83,7 @@ const AppContent: React.FC = () => {
       </main>
 
       {/* Clean Unboxed Footer with Reset Control */}
-      <footer className="mt-auto border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-4 text-xs text-slate-500 dark:text-slate-400 transition-colors">
+      <footer className="mt-auto border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-4 text-xs text-slate-500 dark:text-slate-400 transition-colors no-print">
         <div className="w-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <UshTradersIcon className="w-5 h-5 rounded-md shrink-0 shadow-2xs" />

@@ -724,8 +724,8 @@ export const SalesInvoiceView: React.FC = () => {
 
       {/* ================= VIEW & PRINT INVOICE MODAL ================= */}
       {viewingInvoice && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 max-w-3xl w-full space-y-6 my-auto transition-colors">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto print:p-0 print:bg-transparent print:static">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 max-w-3xl w-full space-y-6 my-auto transition-colors print:max-w-full print:w-full print:p-0 print:border-none print:shadow-none printable-modal">
             
             {/* Modal Header Actions */}
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 no-print">

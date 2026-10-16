@@ -17,6 +17,9 @@ interface BatchLedgerModalProps {
 interface BatchLineRow {
   id: string;
   accountId: string;
+  partyType: 'NONE' | 'OWNER' | 'CUSTOMER' | 'VENDOR' | 'OTHER';
+  partyId?: string;
+  partyName?: string;
   debit: number | '';
   credit: number | '';
   description: string;
@@ -26,17 +29,17 @@ export const BatchLedgerModal: React.FC<BatchLedgerModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { accounts, postJournalEntry } = useAccounting();
+  const { accounts, customers, vendors, partners, postJournalEntry } = useAccounting();
 
   const [entryDate, setEntryDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
   const [entryMemo, setEntryMemo] = useState<string>('Batch General Journal Entry');
   const [entryRef, setEntryRef] = useState<string>('BATCH-01');
 
   const [rows, setRows] = useState<BatchLineRow[]>([
-    { id: '1', accountId: 'acc_1010', debit: 5000, credit: '', description: 'Cash collected' },
-    { id: '2', accountId: 'acc_1100', debit: '', credit: 5000, description: 'Customer receivable reduction' },
-    { id: '3', accountId: 'acc_5090', debit: '', credit: '', description: '' },
-    { id: '4', accountId: '', debit: '', credit: '', description: '' },
+    { id: '1', accountId: 'acc_1010', partyType: 'NONE', partyName: '', debit: 5000, credit: '', description: 'Cash collected' },
+    { id: '2', accountId: 'acc_1100', partyType: 'CUSTOMER', partyId: 'c_01', partyName: 'Rashid Khan', debit: '', credit: 5000, description: 'Customer installment collection' },
+    { id: '3', accountId: 'acc_2010', partyType: 'VENDOR', partyId: 'v_faiz', partyName: 'Faiz Wholesalers', debit: '', credit: '', description: '' },
+    { id: '4', accountId: '', partyType: 'NONE', partyName: '', debit: '', credit: '', description: '' },
   ]);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -52,7 +55,7 @@ export const BatchLedgerModal: React.FC<BatchLedgerModalProps> = ({
   const handleAddRow = () => {
     setRows(prev => [
       ...prev,
-      { id: Date.now().toString(), accountId: '', debit: '', credit: '', description: '' },
+      { id: Date.now().toString(), accountId: '', partyType: 'NONE', partyName: '', debit: '', credit: '', description: '' },
     ]);
   };
 
@@ -69,6 +72,9 @@ export const BatchLedgerModal: React.FC<BatchLedgerModalProps> = ({
       }
       if (field === 'credit' && val !== '') {
         return { ...r, credit: val, debit: '' };
+      }
+      if (field === 'partyType') {
+        return { ...r, partyType: val, partyId: '', partyName: '' };
       }
       return { ...r, [field]: val };
     }));
@@ -98,11 +104,14 @@ export const BatchLedgerModal: React.FC<BatchLedgerModalProps> = ({
         debit: Number(r.debit) || 0,
         credit: Number(r.credit) || 0,
         description: r.description || entryMemo,
+        partyType: r.partyType || 'NONE',
+        partyId: r.partyId,
+        partyName: r.partyName,
       })),
     });
 
     if (res.success) {
-      setSuccessMessage('Batch journal successfully posted to the General Ledger!');
+      setSuccessMessage('Batch journal posted & all customer, vendor, partner ledgers updated!');
       setTimeout(() => {
         setSuccessMessage(null);
         onClose();
@@ -114,7 +123,7 @@ export const BatchLedgerModal: React.FC<BatchLedgerModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
-      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-4xl w-full flex flex-col max-h-[92vh] border border-slate-300 dark:border-slate-800 transition-colors">
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-6xl w-full flex flex-col max-h-[92vh] border border-slate-300 dark:border-slate-800 transition-colors">
         
         {/* Header Bar */}
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/80 rounded-t-xl transition-colors">
@@ -196,12 +205,14 @@ export const BatchLedgerModal: React.FC<BatchLedgerModalProps> = ({
             <table className="w-full text-left text-xs sheet-table">
               <thead>
                 <tr>
-                  <th className="w-10 text-center">#</th>
-                  <th className="w-64">Chart of Accounts</th>
-                  <th className="text-right w-36">Debit (Rs)</th>
-                  <th className="text-right w-36">Credit (Rs)</th>
+                  <th className="w-8 text-center">#</th>
+                  <th className="w-48">Chart of Accounts</th>
+                  <th className="w-32">Party Type</th>
+                  <th className="w-44">Party / Counterparty</th>
+                  <th className="text-right w-28">Debit (Rs)</th>
+                  <th className="text-right w-28">Credit (Rs)</th>
                   <th>Description / Line Memo</th>
-                  <th className="w-12 text-center">Del</th>
+                  <th className="w-10 text-center">Del</th>
                 </tr>
               </thead>
               <tbody>
@@ -224,6 +235,72 @@ export const BatchLedgerModal: React.FC<BatchLedgerModalProps> = ({
                         ))}
                       </select>
                     </td>
+
+                    {/* Party Type Column */}
+                    <td className="p-1">
+                      <select
+                        value={row.partyType}
+                        onChange={(e) => handleRowChange(row.id, 'partyType', e.target.value)}
+                        className="w-full text-xs px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                      >
+                        <option value="NONE">None</option>
+                        <option value="CUSTOMER">Customer</option>
+                        <option value="VENDOR">Vendor / Supplier</option>
+                        <option value="OWNER">Owner / Partner</option>
+                        <option value="OTHER">Other Party</option>
+                      </select>
+                    </td>
+
+                    {/* Party Name / Counterparty with Datalist & Inline Add */}
+                    <td className="p-1">
+                      {row.partyType === 'NONE' ? (
+                        <div className="text-[11px] text-slate-400 dark:text-slate-600 px-2 py-1 italic">
+                          —
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <input
+                            type="text"
+                            list={`party-options-${row.id}`}
+                            placeholder={
+                              row.partyType === 'CUSTOMER' ? 'Select or type customer...' :
+                              row.partyType === 'VENDOR' ? 'Select or type supplier...' :
+                              row.partyType === 'OWNER' ? 'Select or type owner...' :
+                              'Type party name...'
+                            }
+                            value={row.partyName || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              let matchedId = '';
+                              if (row.partyType === 'CUSTOMER') {
+                                const matched = customers.find(c => c.name.toLowerCase() === val.toLowerCase());
+                                if (matched) matchedId = matched.id;
+                              } else if (row.partyType === 'VENDOR') {
+                                const matched = vendors.find(v => v.name.toLowerCase() === val.toLowerCase());
+                                if (matched) matchedId = matched.id;
+                              } else if (row.partyType === 'OWNER') {
+                                const matched = partners.find(p => p.name.toLowerCase() === val.toLowerCase());
+                                if (matched) matchedId = matched.id;
+                              }
+                              setRows(prev => prev.map(r => r.id === row.id ? { ...r, partyName: val, partyId: matchedId } : r));
+                            }}
+                            className="w-full text-xs px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded focus:ring-1 focus:ring-indigo-500 focus:outline-none font-medium placeholder:text-slate-400"
+                          />
+                          <datalist id={`party-options-${row.id}`}>
+                            {row.partyType === 'CUSTOMER' && customers.map(c => (
+                              <option key={c.id} value={c.name}>{`Sr #${c.serialNo} · Bal: Rs ${c.remainingBalance.toLocaleString()}`}</option>
+                            ))}
+                            {row.partyType === 'VENDOR' && vendors.map(v => (
+                              <option key={v.id} value={v.name}>{`Payable: Rs ${v.balancePayable.toLocaleString()} · ${v.category}`}</option>
+                            ))}
+                            {row.partyType === 'OWNER' && partners.map(p => (
+                              <option key={p.id} value={p.name}>{`Equity: Rs ${p.netEquity.toLocaleString()} (${p.sharePercentage}%)`}</option>
+                            ))}
+                          </datalist>
+                        </div>
+                      )}
+                    </td>
+
                     <td className="p-1">
                       <input
                         type="number"

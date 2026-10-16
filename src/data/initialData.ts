@@ -1,4 +1,4 @@
-import { Account, Customer, Vendor, InventoryItem, ExpenseRecord, LoanParty, LoanTransaction, PartnerEquity, AppUser, JournalEntry, Invoice } from '../types/accounting';
+import { Account, Customer, Vendor, InventoryItem, ExpenseRecord, LoanParty, LoanTransaction, PartnerEquity, AppUser, JournalEntry, Invoice, SupplierTransaction } from '../types/accounting';
 
 export const INITIAL_ACCOUNTS: Account[] = [
   // Assets (1000 - 1999)
@@ -68,11 +68,42 @@ export const INITIAL_CUSTOMERS: Customer[] = [
 ];
 
 export const INITIAL_VENDORS: Vendor[] = [
-  { id: 'v_faiz', name: 'Faiz Wholesalers', phone: '0300-9876543', category: 'Mobile & General Goods', balancePayable: 14500, notes: 'Main device & trading goods supplier' },
-  { id: 'v_dawood', name: 'Dawood Connection', phone: '0312-8765432', category: 'Electronics & Mobiles', balancePayable: 0, notes: 'Electronics wholesaling partner' },
-  { id: 'v_yousaf', name: 'Yousaf Traders', phone: '0333-7654321', category: 'Trading Goods', balancePayable: 0, notes: 'Trading loan and inventory partner' },
-  { id: 'v_haseen', name: 'Haseen Ullah', phone: '0345-6543210', category: 'Finance & Supply', balancePayable: 0, notes: 'Short term financing & accessories' },
-  { id: 'v_touhid', name: 'Touhid Mobiles', phone: '0321-5432109', category: 'Smartphones Wholesaler', balancePayable: 0, notes: 'Supplier for credit phones' },
+  { id: 'v_faiz', name: 'Faiz Wholesalers', phone: '0300-9876543', category: 'Mobile & General Goods', balancePayable: 14500, address: 'Hall Road Mobile Market, Lahore', notes: 'Main device & trading goods supplier' },
+  { id: 'v_dawood', name: 'Dawood Connection', phone: '0312-8765432', category: 'Electronics & Mobiles', balancePayable: 0, address: 'Main Bazar, Shop 4', notes: 'Electronics wholesaling partner' },
+  { id: 'v_yousaf', name: 'Yousaf Traders', phone: '0333-7654321', category: 'Trading Goods', balancePayable: 0, address: 'Grain Market Road', notes: 'Trading loan and inventory partner' },
+  { id: 'v_haseen', name: 'Haseen Ullah', phone: '0345-6543210', category: 'Finance & Supply', balancePayable: 0, address: 'Plaza 2, Circular Road', notes: 'Short term financing & accessories' },
+  { id: 'v_touhid', name: 'Touhid Mobiles', phone: '0321-5432109', category: 'Smartphones Wholesaler', balancePayable: 0, address: 'Center Point Mall', notes: 'Supplier for credit phones' },
+];
+
+export const INITIAL_SUPPLIER_TRANSACTIONS: SupplierTransaction[] = [
+  {
+    id: 'st_01',
+    vendorId: 'v_faiz',
+    vendorName: 'Faiz Wholesalers',
+    type: 'PURCHASE_BILL',
+    date: '2026-09-15',
+    reference: 'BILL-FAIZ-901',
+    itemsOrDescription: '3x Samsung Galaxy S25 Devices',
+    totalAmount: 126000,
+    paidAmount: 100000,
+    balancePayableAfter: 26000,
+    paymentMethod: 'UBL Bank',
+    notes: 'Advance partial bank transfer on delivery',
+  },
+  {
+    id: 'st_02',
+    vendorId: 'v_faiz',
+    vendorName: 'Faiz Wholesalers',
+    type: 'PAYMENT',
+    date: '2026-10-02',
+    reference: 'PAY-FAIZ-102',
+    itemsOrDescription: 'Payment against Bill-Faiz-901',
+    totalAmount: 11500,
+    paidAmount: 11500,
+    balancePayableAfter: 14500,
+    paymentMethod: 'Cash In Hand',
+    notes: 'Cash payment from register balance',
+  },
 ];
 
 export const INITIAL_INVENTORY: InventoryItem[] = [

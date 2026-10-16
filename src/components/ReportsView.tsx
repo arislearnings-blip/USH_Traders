@@ -218,8 +218,8 @@ export const ReportsView: React.FC = () => {
   return (
     <div className="space-y-6">
       
-      {/* Top Banner */}
-      <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs transition-colors">
+      {/* Top Banner (Screen controls - hidden during printing) */}
+      <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs transition-colors no-print">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
           <div>
             <div className="flex items-center gap-2">
@@ -285,9 +285,29 @@ export const ReportsView: React.FC = () => {
         </div>
       </div>
 
+      {/* Official Printout Letterhead - ONLY visible when printing */}
+      <div className="hidden print:block mb-4 pb-3 border-b-2 border-slate-900 print-avoid-break">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-black tracking-tight text-slate-950 uppercase">USH TRADERS</h1>
+            <p className="text-xs text-slate-600 font-medium">Financial & Accounting Reports · Single Truth Double-Entry</p>
+          </div>
+          <div className="text-right text-xs text-slate-600">
+            <div className="font-extrabold text-sm text-slate-950 uppercase">
+              {activeReport === 'CASH_FLOW' && 'CASH FLOW STATEMENT'}
+              {activeReport === 'BALANCE_SHEET' && 'BALANCE SHEET (STATEMENT OF FINANCIAL POSITION)'}
+              {activeReport === 'PROFIT_LOSS' && 'STATEMENT OF PROFIT & LOSS (P&L)'}
+              {activeReport === 'TRIAL_BALANCE' && 'TRIAL BALANCE RECONCILIATION'}
+              {activeReport === 'GENERAL_LEDGER' && 'GENERAL LEDGER DRILL-DOWN'}
+            </div>
+            <div>Date: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+          </div>
+        </div>
+      </div>
+
       {/* 1. CASH FLOW STATEMENT VIEW (Directly matching USH TRADERS Sheet Page 11 & 23) */}
       {activeReport === 'CASH_FLOW' && (
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-6 transition-colors">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-6 transition-colors print:p-0 print:border-none print:shadow-none print:space-y-4">
           
           <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
             <h2 className="text-base font-bold text-slate-900 dark:text-white">
@@ -406,7 +426,7 @@ export const ReportsView: React.FC = () => {
 
       {/* 2. BALANCE SHEET VIEW */}
       {activeReport === 'BALANCE_SHEET' && (
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-6 transition-colors">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-6 transition-colors print:p-0 print:border-none print:shadow-none print:space-y-4">
           <div className="border-b border-slate-200 dark:border-slate-800 pb-4 flex justify-between items-center">
             <div>
               <h2 className="text-base font-bold text-slate-900 dark:text-white">
@@ -511,7 +531,7 @@ export const ReportsView: React.FC = () => {
 
       {/* 3. PROFIT & LOSS VIEW */}
       {activeReport === 'PROFIT_LOSS' && (
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-6 transition-colors">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-6 transition-colors print:p-0 print:border-none print:shadow-none print:space-y-4">
           <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
             <h2 className="text-base font-bold text-slate-900 dark:text-white">
               INCOME STATEMENT (PROFIT & LOSS)
@@ -584,7 +604,7 @@ export const ReportsView: React.FC = () => {
 
       {/* 4. TRIAL BALANCE VIEW */}
       {activeReport === 'TRIAL_BALANCE' && (
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4 transition-colors">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4 transition-colors print:p-0 print:border-none print:shadow-none">
           <div className="border-b border-slate-200 dark:border-slate-800 pb-4 flex justify-between items-center">
             <div>
               <h2 className="text-base font-bold text-slate-900 dark:text-white">
@@ -640,7 +660,7 @@ export const ReportsView: React.FC = () => {
 
       {/* 5. GENERAL LEDGER DRILL-DOWN VIEW */}
       {activeReport === 'GENERAL_LEDGER' && (
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4 transition-colors">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4 transition-colors print:p-0 print:border-none print:shadow-none">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800 gap-3">
             <div>
               <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -652,13 +672,13 @@ export const ReportsView: React.FC = () => {
               </p>
             </div>
 
-            {/* Account Selector */}
-            <div className="flex items-center gap-2">
-              <label className="text-xs font-semibold text-slate-700">Account:</label>
+            {/* Account Selector (hidden in printout) */}
+            <div className="flex items-center gap-2 no-print">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Account:</label>
               <select
                 value={selectedGLAccountId}
                 onChange={(e) => setSelectedGLAccountId(e.target.value)}
-                className="text-xs font-semibold px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="text-xs font-semibold px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500"
               >
                 {accounts.map(a => (
                   <option key={a.id} value={a.id}>

@@ -3,6 +3,7 @@ import {
   Account,
   Customer,
   Vendor,
+  SupplierTransaction,
   InventoryItem,
   ExpenseRecord,
   LoanParty,
@@ -19,6 +20,7 @@ import {
   INITIAL_ACCOUNTS,
   INITIAL_CUSTOMERS,
   INITIAL_VENDORS,
+  INITIAL_SUPPLIER_TRANSACTIONS,
   INITIAL_INVENTORY,
   INITIAL_LOAN_PARTIES,
   INITIAL_PARTNERS,
@@ -39,6 +41,7 @@ interface AccountingContextType {
   expenses: ExpenseRecord[];
   journalEntries: JournalEntry[];
   invoices: Invoice[];
+  supplierTransactions: SupplierTransaction[];
   currentUser: AppUser | null;
   setCurrentUser: (user: AppUser | null) => void;
   users: AppUser[];
@@ -87,6 +90,29 @@ interface AccountingContextType {
   // Customer CRUD
   updateCustomer: (id: string, updates: Partial<Customer>) => void;
   deleteCustomer: (id: string) => void;
+
+  // Supplier / Vendor CRUD & Transactions
+  addVendor: (vendor: Omit<Vendor, 'id'>) => void;
+  updateVendor: (id: string, updates: Partial<Vendor>) => void;
+  deleteVendor: (id: string) => void;
+  recordSupplierBill: (data: {
+    vendorId: string;
+    vendorName?: string;
+    billNo?: string;
+    date?: string;
+    itemsDescription: string;
+    totalAmount: number;
+    paidAmount: number;
+    paymentAccountId?: string;
+    notes?: string;
+  }) => { success: boolean; billNo: string; error?: string };
+  recordSupplierPayment: (data: {
+    vendorId: string;
+    amount: number;
+    paymentMethod: 'CASH' | 'ONLINE_TRANSFER' | 'BANK';
+    sourceAccountId?: string;
+    notes?: string;
+  }) => { success: boolean; voucherNo: string; error?: string };
 
   // Payment CRUD
   updatePayment: (id: string, updates: Partial<InstallmentPayment>) => void;
@@ -150,6 +176,9 @@ interface AccountingContextType {
       debit: number;
       credit: number;
       description: string;
+      partyType?: 'NONE' | 'OWNER' | 'CUSTOMER' | 'VENDOR' | 'OTHER';
+      partyId?: string;
+      partyName?: string;
     }>;
   }) => { success: boolean; error?: string };
 
@@ -190,6 +219,11 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
   const [vendors, setVendors] = useState<Vendor[]>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_vendors`);
     return saved ? JSON.parse(saved) : INITIAL_VENDORS;
+  });
+
+  const [supplierTransactions, setSupplierTransactions] = useState<SupplierTransaction[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_supplier_transactions`);
+    return saved ? JSON.parse(saved) : INITIAL_SUPPLIER_TRANSACTIONS;
   });
 
   const [inventory, setInventory] = useState<InventoryItem[]>(() => {
@@ -277,6 +311,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
     localStorage.setItem(`${STORAGE_KEY}_accounts`, JSON.stringify(accounts));
     localStorage.setItem(`${STORAGE_KEY}_customers`, JSON.stringify(customers));
     localStorage.setItem(`${STORAGE_KEY}_vendors`, JSON.stringify(vendors));
+    localStorage.setItem(`${STORAGE_KEY}_supplier_transactions`, JSON.stringify(supplierTransactions));
     localStorage.setItem(`${STORAGE_KEY}_inventory`, JSON.stringify(inventory));
     localStorage.setItem(`${STORAGE_KEY}_loans`, JSON.stringify(loanParties));
     localStorage.setItem(`${STORAGE_KEY}_partners`, JSON.stringify(partners));
@@ -300,7 +335,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
 
   useEffect(() => {
     persistState();
-  }, [accounts, customers, vendors, inventory, loanParties, partners, payments, expenses, journalEntries, invoices, users, currentUser, invitations]);
+  }, [accounts, customers, vendors, supplierTransactions, inventory, loanParties, partners, payments, expenses, journalEntries, invoices, users, currentUser, invitations]);
 
   // Listen to multi-tab sync
   useEffect(() => {
@@ -312,6 +347,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
           const accs = localStorage.getItem(`${STORAGE_KEY}_accounts`);
           const custs = localStorage.getItem(`${STORAGE_KEY}_customers`);
           const vends = localStorage.getItem(`${STORAGE_KEY}_vendors`);
+          const stx = localStorage.getItem(`${STORAGE_KEY}_supplier_transactions`);
           const inv = localStorage.getItem(`${STORAGE_KEY}_inventory`);
           const loans = localStorage.getItem(`${STORAGE_KEY}_loans`);
           const parts = localStorage.getItem(`${STORAGE_KEY}_partners`);
@@ -322,6 +358,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
           if (accs) setAccounts(JSON.parse(accs));
           if (custs) setCustomers(JSON.parse(custs));
           if (vends) setVendors(JSON.parse(vends));
+          if (stx) setSupplierTransactions(JSON.parse(stx));
           if (inv) setInventory(JSON.parse(inv));
           if (loans) setLoanParties(JSON.parse(loans));
           if (parts) setPartners(JSON.parse(parts));
@@ -712,6 +749,215 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
   const deleteCustomer = (id: string) => {
     setCustomers(prev => prev.filter(c => c.id !== id));
     setInvoices(prev => prev.filter(inv => inv.customerId !== id));
+  };
+
+  // Vendor / Supplier CRUD & Transactions
+  const addVendor = (vendor: Omit<Vendor, 'id'>) => {
+    const newVendor: Vendor = {
+      ...vendor,
+      id: `v_${Date.now()}`,
+      balancePayable: vendor.balancePayable || 0,
+    };
+    setVendors(prev => [newVendor, ...prev]);
+  };
+
+  const updateVendor = (id: string, updates: Partial<Vendor>) => {
+    setVendors(prev => prev.map(v => v.id === id ? { ...v, ...updates } : v));
+  };
+
+  const deleteVendor = (id: string) => {
+    setVendors(prev => prev.filter(v => v.id !== id));
+    setSupplierTransactions(prev => prev.filter(st => st.vendorId !== id));
+  };
+
+  const recordSupplierBill = (data: {
+    vendorId: string;
+    vendorName?: string;
+    billNo?: string;
+    date?: string;
+    itemsDescription: string;
+    totalAmount: number;
+    paidAmount: number;
+    paymentAccountId?: string;
+    notes?: string;
+  }) => {
+    const today = data.date || new Date().toISOString().split('T')[0];
+    const billNumber = data.billNo || `BILL-${Date.now().toString().slice(-4)}`;
+    const vendor = vendors.find(v => v.id === data.vendorId);
+    const vendorName = data.vendorName || vendor?.name || 'Supplier';
+
+    const netPayableAddition = Math.max(0, data.totalAmount - data.paidAmount);
+    const currentPayable = vendor?.balancePayable || 0;
+    const newBalancePayable = currentPayable + netPayableAddition;
+
+    // 1. Update vendor balance
+    setVendors(prev => prev.map(v => v.id === data.vendorId ? { ...v, balancePayable: newBalancePayable } : v));
+
+    // 2. Add Supplier Transaction
+    const newTrans: SupplierTransaction = {
+      id: `st_${Date.now()}`,
+      vendorId: data.vendorId,
+      vendorName,
+      type: 'PURCHASE_BILL',
+      date: today,
+      reference: billNumber,
+      itemsOrDescription: data.itemsDescription,
+      totalAmount: data.totalAmount,
+      paidAmount: data.paidAmount,
+      balancePayableAfter: newBalancePayable,
+      paymentMethod: data.paidAmount > 0 ? (data.paymentAccountId === 'acc_1020' ? 'UBL Bank' : 'Cash In Hand') : undefined,
+      notes: data.notes,
+    };
+    setSupplierTransactions(prev => [newTrans, ...prev]);
+
+    // 3. Post Double-Entry Journal Entry
+    const paymentAccountId = data.paymentAccountId || 'acc_1010';
+    const journalLines: JournalLine[] = [
+      {
+        id: `jl_${Date.now()}_1`,
+        accountId: 'acc_1200',
+        accountName: 'Merchandise Inventory',
+        debit: data.totalAmount,
+        credit: 0,
+        description: `Stock Purchase Bill: ${data.itemsDescription} from ${vendorName}`,
+        partyType: 'VENDOR',
+        partyId: data.vendorId,
+        partyName: vendorName,
+      },
+    ];
+
+    if (data.paidAmount > 0) {
+      journalLines.push({
+        id: `jl_${Date.now()}_2`,
+        accountId: paymentAccountId,
+        accountName: accounts.find(a => a.id === paymentAccountId)?.name || 'Cash In Hand',
+        debit: 0,
+        credit: data.paidAmount,
+        description: `Advance/Cash paid for ${billNumber}`,
+        partyType: 'VENDOR',
+        partyId: data.vendorId,
+        partyName: vendorName,
+      });
+    }
+
+    if (netPayableAddition > 0) {
+      journalLines.push({
+        id: `jl_${Date.now()}_3`,
+        accountId: 'acc_2010',
+        accountName: 'Accounts Payable (Vendors)',
+        debit: 0,
+        credit: netPayableAddition,
+        description: `Payable balance on ${billNumber} to ${vendorName}`,
+        partyType: 'VENDOR',
+        partyId: data.vendorId,
+        partyName: vendorName,
+      });
+    }
+
+    const journal: JournalEntry = {
+      id: `je_${Date.now()}`,
+      entryNumber: `JE-${billNumber}`,
+      date: today,
+      reference: billNumber,
+      memo: `Supplier Bill from ${vendorName} (${data.itemsDescription})`,
+      createdBy: currentUser?.name || 'Accountant',
+      createdAt: new Date().toISOString(),
+      sourceType: 'PURCHASE',
+      lines: journalLines,
+    };
+    setJournalEntries(prev => [journal, ...prev]);
+
+    // 4. Update account balances
+    setAccounts(prev => prev.map(a => {
+      if (a.id === 'acc_1200') return { ...a, balance: a.balance + data.totalAmount };
+      if (a.id === paymentAccountId && data.paidAmount > 0) return { ...a, balance: Math.max(0, a.balance - data.paidAmount) };
+      if (a.id === 'acc_2010' && netPayableAddition > 0) return { ...a, balance: a.balance + netPayableAddition };
+      return a;
+    }));
+
+    return { success: true, billNo: billNumber };
+  };
+
+  const recordSupplierPayment = (data: {
+    vendorId: string;
+    amount: number;
+    paymentMethod: 'CASH' | 'ONLINE_TRANSFER' | 'BANK';
+    sourceAccountId?: string;
+    notes?: string;
+  }) => {
+    const today = new Date().toISOString().split('T')[0];
+    const voucherNo = `SPV-${Date.now().toString().slice(-4)}`;
+    const vendor = vendors.find(v => v.id === data.vendorId);
+    const vendorName = vendor?.name || 'Supplier';
+
+    const newBalancePayable = Math.max(0, (vendor?.balancePayable || 0) - data.amount);
+
+    // 1. Update vendor balance
+    setVendors(prev => prev.map(v => v.id === data.vendorId ? { ...v, balancePayable: newBalancePayable } : v));
+
+    // 2. Add Supplier Transaction
+    const newTrans: SupplierTransaction = {
+      id: `st_${Date.now()}`,
+      vendorId: data.vendorId,
+      vendorName,
+      type: 'PAYMENT',
+      date: today,
+      reference: voucherNo,
+      itemsOrDescription: `Payment to ${vendorName}`,
+      totalAmount: data.amount,
+      paidAmount: data.amount,
+      balancePayableAfter: newBalancePayable,
+      paymentMethod: data.paymentMethod,
+      notes: data.notes,
+    };
+    setSupplierTransactions(prev => [newTrans, ...prev]);
+
+    // 3. Post Double-Entry Journal Entry
+    const paymentAccountId = data.sourceAccountId || (data.paymentMethod === 'BANK' ? 'acc_1020' : 'acc_1010');
+    const journal: JournalEntry = {
+      id: `je_${Date.now()}`,
+      entryNumber: `JE-${voucherNo}`,
+      date: today,
+      reference: voucherNo,
+      memo: `Payment to supplier ${vendorName} via ${data.paymentMethod}`,
+      createdBy: currentUser?.name || 'Accountant',
+      createdAt: new Date().toISOString(),
+      sourceType: 'PAYMENT',
+      lines: [
+        {
+          id: `jl_${Date.now()}_1`,
+          accountId: 'acc_2010',
+          accountName: 'Accounts Payable (Vendors)',
+          debit: data.amount,
+          credit: 0,
+          description: `Disbursement to ${vendorName} against outstanding balance`,
+          partyType: 'VENDOR',
+          partyId: data.vendorId,
+          partyName: vendorName,
+        },
+        {
+          id: `jl_${Date.now()}_2`,
+          accountId: paymentAccountId,
+          accountName: accounts.find(a => a.id === paymentAccountId)?.name || 'Cash In Hand',
+          debit: 0,
+          credit: data.amount,
+          description: `Payment to ${vendorName} from ${paymentAccountId}`,
+          partyType: 'VENDOR',
+          partyId: data.vendorId,
+          partyName: vendorName,
+        },
+      ],
+    };
+    setJournalEntries(prev => [journal, ...prev]);
+
+    // 4. Update account balances
+    setAccounts(prev => prev.map(a => {
+      if (a.id === 'acc_2010') return { ...a, balance: Math.max(0, a.balance - data.amount) };
+      if (a.id === paymentAccountId) return { ...a, balance: Math.max(0, a.balance - data.amount) };
+      return a;
+    }));
+
+    return { success: true, voucherNo };
   };
 
   // Action: Payment CRUD
@@ -1198,10 +1444,13 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
       debit: number;
       credit: number;
       description: string;
+      partyType?: 'NONE' | 'OWNER' | 'CUSTOMER' | 'VENDOR' | 'OTHER';
+      partyId?: string;
+      partyName?: string;
     }>;
   }) => {
-    const totalDebit = entry.lines.reduce((sum, l) => sum + (l.debit || 0), 0);
-    const totalCredit = entry.lines.reduce((sum, l) => sum + (l.credit || 0), 0);
+    const totalDebit = entry.lines.reduce((sum, l) => sum + (Number(l.debit) || 0), 0);
+    const totalCredit = entry.lines.reduce((sum, l) => sum + (Number(l.credit) || 0), 0);
 
     if (Math.abs(totalDebit - totalCredit) > 0.01) {
       return {
@@ -1214,7 +1463,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
       id: `je_${Date.now()}`,
       entryNumber: `JE-${journalEntries.length + 101}`,
       date: entry.date,
-      reference: entry.reference || 'MANUAL',
+      reference: entry.reference || 'BATCH',
       memo: entry.memo,
       createdBy: currentUser?.name || 'Ari Accounts',
       createdAt: new Date().toISOString(),
@@ -1223,9 +1472,12 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
         id: `jl_${Date.now()}_${idx}`,
         accountId: l.accountId,
         accountName: accounts.find(a => a.id === l.accountId)?.name || 'Account',
-        debit: l.debit || 0,
-        credit: l.credit || 0,
+        debit: Number(l.debit) || 0,
+        credit: Number(l.credit) || 0,
         description: l.description,
+        partyType: l.partyType || 'NONE',
+        partyId: l.partyId,
+        partyName: l.partyName,
       })),
     };
 
@@ -1237,14 +1489,149 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
       if (!line) return acc;
 
       const netChange = (acc.type === 'ASSET' || acc.type === 'EXPENSE')
-        ? (line.debit - line.credit)
-        : (line.credit - line.debit);
+        ? ((Number(line.debit) || 0) - (Number(line.credit) || 0))
+        : ((Number(line.credit) || 0) - (Number(line.debit) || 0));
 
       return {
         ...acc,
         balance: acc.balance + netChange,
       };
     }));
+
+    // Process line party updates for Customer, Vendor, Owner/Partner, Other
+    entry.lines.forEach((l, idx) => {
+      const pType = l.partyType;
+      const pName = l.partyName?.trim();
+      const pId = l.partyId;
+
+      if (!pType || pType === 'NONE' || !pName) return;
+
+      if (pType === 'CUSTOMER') {
+        const found = customers.find(c => (pId && c.id === pId) || c.name.toLowerCase() === pName.toLowerCase());
+        const debitVal = Number(l.debit) || 0;
+        const creditVal = Number(l.credit) || 0;
+        const netChange = debitVal - creditVal;
+
+        if (!found) {
+          // Inline addition of new customer!
+          const newCust: Customer = {
+            id: `c_${Date.now()}_${idx}`,
+            serialNo: customers.length + 1,
+            name: pName,
+            phone: '',
+            address: '',
+            totalPurchases: Math.max(0, debitVal),
+            advancePaid: 0,
+            monthlyInstallment: 0,
+            remainingBalance: Math.max(0, netChange),
+            startDate: entry.date,
+            status: netChange > 0 ? 'ACTIVE' : 'SETTLED',
+            notes: l.description || entry.memo,
+          };
+          setCustomers(prev => [...prev, newCust]);
+        } else {
+          // Update existing customer balance
+          setCustomers(prev => prev.map(c => {
+            if (c.id === found.id) {
+              const updatedBal = Math.max(0, c.remainingBalance + netChange);
+              return {
+                ...c,
+                remainingBalance: updatedBal,
+                totalPurchases: debitVal > 0 ? c.totalPurchases + debitVal : c.totalPurchases,
+                status: updatedBal === 0 ? 'SETTLED' : 'ACTIVE',
+              };
+            }
+            return c;
+          }));
+        }
+
+        // If customer was credited in batch (recovery/payment), also record in payments table so khata displays it
+        if (creditVal > 0) {
+          const targetCustId = found?.id || `c_${Date.now()}_${idx}`;
+          const currentBal = found?.remainingBalance || Math.max(0, debitVal - creditVal);
+          const newPmt: InstallmentPayment = {
+            id: `pmt_batch_${Date.now()}_${idx}`,
+            receiptNo: `REC-B${Date.now().toString().slice(-4)}`,
+            customerId: targetCustId,
+            customerName: pName,
+            date: entry.date,
+            amount: creditVal,
+            paymentMethod: 'CASH',
+            discountAllowed: 0,
+            collectedBy: currentUser?.name || 'Accountant',
+            notes: l.description || entry.memo,
+            remainingBalanceAfter: Math.max(0, currentBal - creditVal),
+          };
+          setPayments(prev => [newPmt, ...prev]);
+        }
+      } else if (pType === 'VENDOR') {
+        const found = vendors.find(v => (pId && v.id === pId) || v.name.toLowerCase() === pName.toLowerCase());
+        const debitVal = Number(l.debit) || 0;
+        const creditVal = Number(l.credit) || 0;
+        const netPayableChange = creditVal - debitVal;
+
+        let targetVendorId = found?.id;
+        if (!found) {
+          // Inline addition of new vendor/supplier!
+          targetVendorId = `v_${Date.now()}_${idx}`;
+          const newVend: Vendor = {
+            id: targetVendorId,
+            name: pName,
+            phone: '',
+            category: 'General Supplier',
+            balancePayable: Math.max(0, netPayableChange),
+            notes: l.description || entry.memo,
+          };
+          setVendors(prev => [...prev, newVend]);
+        } else {
+          setVendors(prev => prev.map(v => {
+            if (v.id === found.id) {
+              return { ...v, balancePayable: Math.max(0, v.balancePayable + netPayableChange) };
+            }
+            return v;
+          }));
+        }
+
+        // Add supplier transaction
+        const stType = creditVal > 0 ? 'PURCHASE_BILL' : 'PAYMENT';
+        const stAmount = creditVal > 0 ? creditVal : debitVal;
+        if (stAmount > 0) {
+          const newSt: SupplierTransaction = {
+            id: `st_batch_${Date.now()}_${idx}`,
+            vendorId: targetVendorId!,
+            vendorName: pName,
+            type: stType,
+            date: entry.date,
+            reference: entry.reference || 'BATCH',
+            itemsOrDescription: l.description || entry.memo,
+            totalAmount: stAmount,
+            paidAmount: stType === 'PAYMENT' ? stAmount : 0,
+            balancePayableAfter: Math.max(0, ((found?.balancePayable || 0) + netPayableChange)),
+            notes: entry.memo,
+          };
+          setSupplierTransactions(prev => [newSt, ...prev]);
+        }
+      } else if (pType === 'OWNER') {
+        const partner = partners.find(p => (pId && p.id === pId) || p.name.toLowerCase().includes(pName.toLowerCase()));
+        if (partner) {
+          const debitVal = Number(l.debit) || 0;
+          const creditVal = Number(l.credit) || 0;
+          if (creditVal > 0) {
+            setPartners(prev => prev.map(p => p.id === partner.id ? {
+              ...p,
+              currentInvestment: p.currentInvestment + creditVal,
+              netEquity: p.netEquity + creditVal,
+            } : p));
+          } else if (debitVal > 0) {
+            setPartners(prev => prev.map(p => p.id === partner.id ? {
+              ...p,
+              drawings: p.drawings + debitVal,
+              netEquity: p.netEquity - debitVal,
+            } : p));
+          }
+        }
+      }
+    });
 
     return { success: true };
   };
@@ -1254,6 +1641,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
     localStorage.removeItem(`${STORAGE_KEY}_accounts`);
     localStorage.removeItem(`${STORAGE_KEY}_customers`);
     localStorage.removeItem(`${STORAGE_KEY}_vendors`);
+    localStorage.removeItem(`${STORAGE_KEY}_supplier_transactions`);
     localStorage.removeItem(`${STORAGE_KEY}_inventory`);
     localStorage.removeItem(`${STORAGE_KEY}_loans`);
     localStorage.removeItem(`${STORAGE_KEY}_partners`);
@@ -1265,6 +1653,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
     setAccounts(INITIAL_ACCOUNTS);
     setCustomers(INITIAL_CUSTOMERS);
     setVendors(INITIAL_VENDORS);
+    setSupplierTransactions(INITIAL_SUPPLIER_TRANSACTIONS);
     setInventory(INITIAL_INVENTORY);
     setLoanParties(INITIAL_LOAN_PARTIES);
     setPartners(INITIAL_PARTNERS);
@@ -1283,6 +1672,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
       accounts,
       customers,
       vendors,
+      supplierTransactions,
       inventory,
       loanParties,
       partners,
@@ -1308,6 +1698,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
         setAccounts(parsed.accounts);
         setCustomers(parsed.customers);
         if (parsed.vendors) setVendors(parsed.vendors);
+        if (parsed.supplierTransactions) setSupplierTransactions(parsed.supplierTransactions);
         if (parsed.inventory) setInventory(parsed.inventory);
         if (parsed.loanParties) setLoanParties(parsed.loanParties);
         if (parsed.partners) setPartners(parsed.partners);
@@ -1429,6 +1820,12 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
         accounts,
         customers,
         vendors,
+        addVendor,
+        updateVendor,
+        deleteVendor,
+        supplierTransactions,
+        recordSupplierBill,
+        recordSupplierPayment,
         inventory,
         loanParties,
         partners,
